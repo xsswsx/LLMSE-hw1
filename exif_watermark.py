@@ -86,7 +86,22 @@ def add_watermark(image_path, output_path, date_text, position='right-bottom',
         width, height = img.size
         
         # 获取文本尺寸
-        text_width, text_height = draw.textsize(date_text, font=font) if hasattr(draw, 'textsize') else font.getsize(date_text)
+        if hasattr(draw, 'textsize'):
+            text_width, text_height = draw.textsize(date_text, font=font)
+        elif hasattr(font, 'getbbox'):
+            # 新版Pillow使用getbbox
+            bbox = font.getbbox(date_text)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+        elif hasattr(font, 'getlength'):
+            # 如果有getlength但没有getbbox
+            text_width = font.getlength(date_text)
+            # 估算高度，可能不够精确
+            text_height = font_size
+        else:
+            # 最后的备选方案
+            text_width = len(date_text) * (font_size // 2)
+            text_height = font_size
         
         # 根据位置参数确定水印位置
         padding = 10  # 边距
